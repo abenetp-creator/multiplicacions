@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplicació Escolar - Correcció Zeros</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 800px; text-align: center; }
+        
+        .horizontal-box { font-size: 2.2rem; margin-bottom: 25px; padding: 25px; background: #fff4e6; border-radius: 12px; border: 2px solid #e67e22; }
+        input { width: 220px; font-size: 2rem; padding: 8px; border: 2px solid #bdc3c7; border-radius: 8px; text-align: center; }
+
+        .vertical-container { display: inline-block; background: #fff; padding: 20px; margin-top: 10px; }
+        .row { display: flex; justify-content: flex-end; align-items: center; height: 45px; }
+        
+        /* Cel·les de mida fixa per a alineació total */
+        .digit { width: 32px; font-family: 'Courier New', monospace; font-size: 2.8rem; font-weight: bold; text-align: center; }
+        .comma { width: 15px; font-family: 'Courier New', monospace; font-size: 2.8rem; font-weight: bold; color: #e74c3c; text-align: center; }
+        .operator { width: 40px; font-size: 2.2rem; color: #e67e22; font-family: 'Courier New', monospace; text-align: center; }
+        .linea { border-top: 4px solid #333; margin: 8px 0; width: 100%; }
+        
+        .btn-main { padding: 15px 30px; font-size: 1.2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; margin: 5px; color: white; transition: 0.2s; }
+        .btn-check { background: #e67e22; }
+        .btn-next { background: #2ecc71; }
+        .feedback { margin: 20px; font-size: 1.4rem; font-weight: bold; }
+        .hidden { display: none !important; }
+        .info-decimals { color: #666; font-size: 1.1rem; margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 10px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Multiplicació amb Decimals</h1>
+    
+    <div class="horizontal-box">
+        <span id="h-n1">0</span> × <span id="h-n2">0</span> = 
+        <input type="text" id="user-ans" autocomplete="off" placeholder="?">
+    </div>
+
+    <button class="btn-main btn-check" onclick="check()">Comprova</button>
+    <button class="btn-main btn-next" onclick="generate()">Nova Operació</button>
+
+    <div id="msg" class="feedback"></div>
+
+    <div id="sol-box" class="hidden">
+        <hr>
+        <div class="vertical-container" id="v-container"></div>
+        <div id="decimal-help" class="info-decimals"></div>
+    </div>
+</div>
+
+<script>
+    let n1, n2, result;
+
+    function generate() {
+        // Factors segons la teua petició: 100-999 i 10-99
+        n1 = parseFloat((Math.random() * 899 + 100).toFixed(Math.floor(Math.random() * 2) + 1));
+        n2 = parseFloat((Math.random() * 89 + 10).toFixed(Math.floor(Math.random() * 2) + 1));
+        // Calculem el resultat real
+        result = parseFloat((n1 * n2).toFixed(4));
+
+        document.getElementById('h-n1').innerText = n1.toString().replace('.', ',');
+        document.getElementById('h-n2').innerText = n2.toString().replace('.', ',');
+        document.getElementById('user-ans').value = '';
+        document.getElementById('msg').innerText = '';
+        document.getElementById('sol-box').classList.add('hidden');
+    }
+
+    function renderRow(container, strValue, isDecimalForm, offset = 0) {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        // Afegim espais buits a la dreta per a l'escalat de la multiplicació
+        const content = strValue + " ".repeat(offset);
+
+        for (let char of content) {
+            const div = document.createElement('div');
+            if (char === '.' || char === ',') {
+                div.className = 'comma';
+                div.innerText = ',';
+            } else if (char === " ") {
+                div.className = 'digit';
+                div.innerText = "";
+            } else {
+                div.className = 'digit';
+                div.innerText = char;
+            }
+            row.appendChild(div);
+        }
+        container.appendChild(row);
+    }
+
+    function check() {
+        const userIn = document.getElementById('user-ans').value.replace(',', '.');
+        const userVal = parseFloat(userIn);
+        const msg = document.getElementById('msg');
+        
+        if (!isNaN(userVal) && Math.abs(userVal - result) < 0.0001) {
+            msg.innerText = "¡Molt bé! Resposta correcta. 🌟";
+            msg.style.color = "#2ecc71";
+        } else {
+            msg.innerText = `Incorrecte. El resultat és ${result.toString().replace('.', ',')}`;
+            msg.style.color = "#e74c3c";
+        }
+
+        const container = document.getElementById('v-container');
+        container.innerHTML = '';
+
+        // 1. Factors amb la seua coma
+        renderRow(container, n1.toString());
+        
+        const rowOp = document.createElement('div');
+        rowOp.className = 'row';
+        const op = document.createElement('div'); op.className = 'operator'; op.innerText = '×';
+        rowOp.appendChild(op);
+        container.appendChild(rowOp);
+        renderRow(container, n2.toString());
+
+        container.appendChild(document.createElement('div')).className = 'linea';
+
+        // 2. PRODUCTES INTERMEDIS (Lògica de zero obligatori)
+        const s1Clean = n1.toString().replace('.', '');
+        const s2Clean = n2.toString().replace('.', '');
+        const n1Int = parseInt(s1Clean);
+
+        for (let i = 0; i < s2Clean.length; i++) {
+            let digitMult = parseInt(s2Clean[s2Clean.length - 1 - i]);
+            let subtotal = (n1Int * digitMult).toString();
+            // L'offset és la posició (0 per a les unitats, 1 per a les desenes...)
+            renderRow(container, subtotal, false, i);
+        }
+
+        container.appendChild(document.createElement('div')).className = 'linea';
+
+        // 3. Resultat Final
+        renderRow(container, result.toString());
+
+        // 4. Explicació visual
+        const d1 = (n1.toString().split('.')[1] || "").length;
+        const d2 = (n2.toString().split('.')[1] || "").length;
+        document.getElementById('decimal-help').innerHTML = 
+            `<strong>Com col·loquem la coma?</strong><br>` +
+            `Dalt tenim <b>${d1}</b> decimals i davall <b>${d2}</b> decimals.<br>` +
+            `En total són <b>${d1+d2}</b> decimals. Contem ${d1+d2} salts des de la dreta del resultat final.`;
+
+        document.getElementById('sol-box').classList.remove('hidden');
+    }
+
+    window.onload = generate;
+</script>
+</body>
+</html>
