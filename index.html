@@ -3,18 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplicació Escolar - Correcció Zeros</title>
+    <title>Multiplicació Escolar - Configurable</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
         .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 800px; text-align: center; }
         
+        /* ESTILS CONFIGURACIÓ */
+        .config-panel {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .config-group { display: flex; flex-direction: column; align-items: center; }
+        .config-group h3 { margin: 0 0 10px 0; font-size: 1rem; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+        .input-row { display: flex; gap: 10px; align-items: center; }
+        .input-group { display: flex; flex-direction: column; align-items: center; }
+        .input-group label { font-size: 0.9rem; color: #777; margin-bottom: 4px; font-weight: 500; }
+        .input-mini { 
+            width: 70px; 
+            font-size: 1.1rem; 
+            padding: 5px; 
+            border: 1px solid #bdc3c7; 
+            border-radius: 6px; 
+            text-align: center; 
+        }
+
+        /* ESTILS ORIGINALS */
         .horizontal-box { font-size: 2.2rem; margin-bottom: 25px; padding: 25px; background: #fff4e6; border-radius: 12px; border: 2px solid #e67e22; }
-        input { width: 220px; font-size: 2rem; padding: 8px; border: 2px solid #bdc3c7; border-radius: 8px; text-align: center; }
+        #user-ans { width: 220px; font-size: 2rem; padding: 8px; border: 2px solid #bdc3c7; border-radius: 8px; text-align: center; }
 
         .vertical-container { display: inline-block; background: #fff; padding: 20px; margin-top: 10px; }
         .row { display: flex; justify-content: flex-end; align-items: center; height: 45px; }
         
-        /* Cel·les de mida fixa per a alineació total */
         .digit { width: 32px; font-family: 'Courier New', monospace; font-size: 2.8rem; font-weight: bold; text-align: center; }
         .comma { width: 15px; font-family: 'Courier New', monospace; font-size: 2.8rem; font-weight: bold; color: #e74c3c; text-align: center; }
         .operator { width: 40px; font-size: 2.2rem; color: #e67e22; font-family: 'Courier New', monospace; text-align: center; }
@@ -23,6 +49,8 @@
         .btn-main { padding: 15px 30px; font-size: 1.2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; margin: 5px; color: white; transition: 0.2s; }
         .btn-check { background: #e67e22; }
         .btn-next { background: #2ecc71; }
+        .btn-main:hover { opacity: 0.9; transform: translateY(-2px); }
+        
         .feedback { margin: 20px; font-size: 1.4rem; font-weight: bold; }
         .hidden { display: none !important; }
         .info-decimals { color: #666; font-size: 1.1rem; margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 10px; line-height: 1.6; }
@@ -33,13 +61,42 @@
 <div class="card">
     <h1>Multiplicació amb Decimals</h1>
     
+    <div class="config-panel">
+        <div class="config-group">
+            <h3>Factor 1</h3>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Part entera</label>
+                    <input type="number" id="f1-int" class="input-mini" value="3" min="1" max="6">
+                </div>
+                <div class="input-group">
+                    <label>Decimals</label>
+                    <input type="number" id="f1-dec" class="input-mini" value="2" min="0" max="4">
+                </div>
+            </div>
+        </div>
+
+        <div class="config-group">
+            <h3>Factor 2</h3>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Part entera</label>
+                    <input type="number" id="f2-int" class="input-mini" value="2" min="1" max="6">
+                </div>
+                <div class="input-group">
+                    <label>Decimals</label>
+                    <input type="number" id="f2-dec" class="input-mini" value="1" min="0" max="4">
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="horizontal-box">
         <span id="h-n1">0</span> × <span id="h-n2">0</span> = 
         <input type="text" id="user-ans" autocomplete="off" placeholder="?">
     </div>
 
-    <button class="btn-main btn-check" onclick="check()">Comprova</button>
-    <button class="btn-main btn-next" onclick="generate()">Nova Operació</button>
+    <button type="button" class="btn-main btn-check" onclick="check()">Comprova</button>
+    <button type="button" class="btn-main btn-next" onclick="generate()">Nova Operació</button>
 
     <div id="msg" class="feedback"></div>
 
@@ -51,27 +108,84 @@
 </div>
 
 <script>
+    // Variables globals
     let n1, n2, result;
 
-    function generate() {
-        // Factors segons la teua petició: 100-999 i 10-99
-        n1 = parseFloat((Math.random() * 899 + 100).toFixed(Math.floor(Math.random() * 2) + 1));
-        n2 = parseFloat((Math.random() * 89 + 10).toFixed(Math.floor(Math.random() * 2) + 1));
-        // Calculem el resultat real
-        result = parseFloat((n1 * n2).toFixed(4));
+    /**
+     * Genera un número aleatori amb 'intDigits' xifres a l'esquerra
+     * i 'decDigits' xifres a la dreta de la coma.
+     */
+    function generateRandomByDigits(intDigits, decDigits) {
+        // Protecció contra valors nuls o negatius
+        if (!intDigits || intDigits < 1) intDigits = 1;
+        if (!decDigits || decDigits < 0) decDigits = 0;
 
-        document.getElementById('h-n1').innerText = n1.toString().replace('.', ',');
-        document.getElementById('h-n2').innerText = n2.toString().replace('.', ',');
-        document.getElementById('user-ans').value = '';
-        document.getElementById('msg').innerText = '';
-        document.getElementById('sol-box').classList.add('hidden');
+        // 1. Generar part entera
+        // Mínim: 10^(digits-1) (ex: 3 digits -> 100)
+        // Màxim: 10^(digits)-1 (ex: 3 digits -> 999)
+        const minInt = Math.pow(10, intDigits - 1);
+        const maxInt = Math.pow(10, intDigits) - 1;
+        const integerPart = Math.floor(Math.random() * (maxInt - minInt + 1)) + minInt;
+
+        if (decDigits === 0) return integerPart;
+
+        // 2. Generar part decimal
+        // Construim un string per assegurar la longitud exacta
+        let decimalStr = "";
+        for (let i = 0; i < decDigits; i++) {
+            // Per a l'últim dígit decimal, evitem el 0 (1-9)
+            // perquè visualment es mantinguen les xifres demanades.
+            if (i === decDigits - 1) {
+                decimalStr += Math.floor(Math.random() * 9) + 1;
+            } else {
+                decimalStr += Math.floor(Math.random() * 10);
+            }
+        }
+
+        // Unim i convertim a float
+        return parseFloat(`${integerPart}.${decimalStr}`);
+    }
+
+    function generate() {
+        try {
+            // Obtenim configuració, amb valors per defecte si estan buits
+            const i1 = document.getElementById('f1-int');
+            const d1 = document.getElementById('f1-dec');
+            const i2 = document.getElementById('f2-int');
+            const d2 = document.getElementById('f2-dec');
+
+            const f1Int = i1.value ? parseInt(i1.value) : 3;
+            const f1Dec = d1.value ? parseInt(d1.value) : 2;
+            const f2Int = i2.value ? parseInt(i2.value) : 2;
+            const f2Dec = d2.value ? parseInt(d2.value) : 1;
+
+            // Generem els números
+            n1 = generateRandomByDigits(f1Int, f1Dec);
+            n2 = generateRandomByDigits(f2Int, f2Dec);
+            
+            // Calculem resultat real
+            // (fixem decimals per evitar errors de flotant tipus 0.00000004)
+            result = parseFloat((n1 * n2).toFixed(f1Dec + f2Dec));
+
+            // Actualitzem la interfície
+            document.getElementById('h-n1').innerText = n1.toString().replace('.', ',');
+            document.getElementById('h-n2').innerText = n2.toString().replace('.', ',');
+            document.getElementById('user-ans').value = '';
+            document.getElementById('msg').innerText = '';
+            document.getElementById('sol-box').classList.add('hidden');
+            
+            // Posem el focus al input perquè l'alumne escriga directament
+            document.getElementById('user-ans').focus();
+        } catch (e) {
+            console.error("Error generant l'operació:", e);
+            alert("Hi ha hagut un error generant els números. Revisa la configuració.");
+        }
     }
 
     function renderRow(container, strValue, isDecimalForm, offset = 0) {
         const row = document.createElement('div');
         row.className = 'row';
 
-        // Afegim espais buits a la dreta per a l'escalat de la multiplicació
         const content = strValue + " ".repeat(offset);
 
         for (let char of content) {
@@ -96,7 +210,7 @@
         const userVal = parseFloat(userIn);
         const msg = document.getElementById('msg');
         
-        if (!isNaN(userVal) && Math.abs(userVal - result) < 0.0001) {
+        if (!isNaN(userVal) && Math.abs(userVal - result) < 0.000001) {
             msg.innerText = "¡Molt bé! Resposta correcta. 🌟";
             msg.style.color = "#2ecc71";
         } else {
@@ -107,7 +221,7 @@
         const container = document.getElementById('v-container');
         container.innerHTML = '';
 
-        // 1. Factors amb la seua coma
+        // 1. Factors
         renderRow(container, n1.toString());
         
         const rowOp = document.createElement('div');
@@ -119,19 +233,20 @@
 
         container.appendChild(document.createElement('div')).className = 'linea';
 
-        // 2. PRODUCTES INTERMEDIS (Lògica de zero obligatori)
+        // 2. PRODUCTES INTERMEDIS
         const s1Clean = n1.toString().replace('.', '');
         const s2Clean = n2.toString().replace('.', '');
         const n1Int = parseInt(s1Clean);
 
-        for (let i = 0; i < s2Clean.length; i++) {
-            let digitMult = parseInt(s2Clean[s2Clean.length - 1 - i]);
-            let subtotal = (n1Int * digitMult).toString();
-            // L'offset és la posició (0 per a les unitats, 1 per a les desenes...)
-            renderRow(container, subtotal, false, i);
+        // Si el segon número té més d'una xifra (ignorant la coma), mostrem els passos intermedis
+        if (s2Clean.length > 1) {
+            for (let i = 0; i < s2Clean.length; i++) {
+                let digitMult = parseInt(s2Clean[s2Clean.length - 1 - i]);
+                let subtotal = (n1Int * digitMult).toString();
+                renderRow(container, subtotal, false, i);
+            }
+            container.appendChild(document.createElement('div')).className = 'linea';
         }
-
-        container.appendChild(document.createElement('div')).className = 'linea';
 
         // 3. Resultat Final
         renderRow(container, result.toString());
@@ -139,14 +254,29 @@
         // 4. Explicació visual
         const d1 = (n1.toString().split('.')[1] || "").length;
         const d2 = (n2.toString().split('.')[1] || "").length;
-        document.getElementById('decimal-help').innerHTML = 
-            `<strong>Com col·loquem la coma?</strong><br>` +
+        
+        let helpText = "";
+        if (d1 + d2 === 0) {
+            helpText = "Sense decimals. Multiplicació normal.";
+        } else {
+            helpText = `<strong>Com col·loquem la coma?</strong><br>` +
             `Dalt tenim <b>${d1}</b> decimals i davall <b>${d2}</b> decimals.<br>` +
-            `En total són <b>${d1+d2}</b> decimals. Contem ${d1+d2} salts des de la dreta del resultat final.`;
+            `En total són <b>${d1+d2}</b> decimals. Contem ${d1+d2} salts des de la dreta.`;
+        }
+        document.getElementById('decimal-help').innerHTML = helpText;
 
         document.getElementById('sol-box').classList.remove('hidden');
     }
 
+    // Assignar event Enter als inputs de configuració per generar ràpidament
+    const configInputs = document.querySelectorAll('.input-mini');
+    configInputs.forEach(input => {
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') generate();
+        });
+    });
+
+    // Iniciar la primera operació al carregar
     window.onload = generate;
 </script>
 </body>
